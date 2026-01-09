@@ -17,11 +17,11 @@ import {
   ResponsiveContainer,
   Legend,
 } from 'recharts';
-import { useDemoTransactions } from '@/hooks/use-demo-transactions';
-import { useDemoCategorization } from '@/hooks/use-categorization';
+import { useTransactions, useCategorizations } from '@/hooks/use-transactions';
 import { useIncome } from '@/hooks/use-income';
 import { formatCurrency } from '@/lib/utils';
 import { IncomeSettingsModal } from '@/components/income/income-settings-modal';
+import { useSession } from 'next-auth/react';
 import type { TrafficLightZone } from '@/constants/traffic-light';
 
 const ZONE_COLORS = {
@@ -51,18 +51,29 @@ function CustomTooltip({ active, payload, label }: { active?: boolean; payload?:
 }
 
 export default function TrendsPage() {
-  const { transactions, isLoading } = useDemoTransactions('demo-user', 30);
-  const { categorizations } = useDemoCategorization('demo-user');
-  const { calculations: incomeCalc, hasActiveIncome } = useIncome('demo-user');
+  const { data: session } = useSession();
+  const { transactions: rawTransactions, isLoading } = useTransactions(90);
+  const { categorizations: rawCategorizations } = useCategorizations();
+  const userId = session?.user?.id || 'demo-user';
+  const { calculations: incomeCalc, hasActiveIncome } = useIncome(userId);
   const [timeRange, setTimeRange] = useState<TimeRange>('30d');
   const [showIncomeModal, setShowIncomeModal] = useState(false);
+
+  // Transform transactions
+  const transactions = useMemo(() =>
+    rawTransactions.map(t => ({
+      id: t.id,
+      amount: t.amount,
+      merchantName: t.merchantName,
+      date: new Date(t.date),
+    })), [rawTransactions]);
 
   // Create categorization map
   const categorizationMap = useMemo(() => {
     const map = new Map<string, TrafficLightZone>();
-    categorizations.forEach((c) => map.set(c.transactionId, c.zone));
+    rawCategorizations.forEach((c) => map.set(c.transactionId, c.zone as TrafficLightZone));
     return map;
-  }, [categorizations]);
+  }, [rawCategorizations]);
 
   // Filter transactions by time range
   const filteredTransactions = useMemo(() => {
@@ -524,7 +535,7 @@ export default function TrendsPage() {
 
       {/* Income Settings Modal */}
       <IncomeSettingsModal
-        userId="demo-user"
+        userId={userId}
         isOpen={showIncomeModal}
         onClose={() => setShowIncomeModal(false)}
       />

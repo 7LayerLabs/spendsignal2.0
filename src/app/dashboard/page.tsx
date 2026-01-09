@@ -1,19 +1,35 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import Link from 'next/link';
-import { useDemoTransactions } from '@/hooks/use-demo-transactions';
-import { useDemoCategorization } from '@/hooks/use-categorization';
+import { useTransactions, useCategorizations } from '@/hooks/use-transactions';
 import { useIncome } from '@/hooks/use-income';
 import { formatCurrency, calculateHealthScore } from '@/lib/utils';
 import { ZONE_CONFIG } from '@/constants/traffic-light';
 import { IncomeSettingsModal } from '@/components/income/income-settings-modal';
+import { useSession } from 'next-auth/react';
 
 export default function DashboardPage() {
+  const { data: session } = useSession();
   const [showIncomeModal, setShowIncomeModal] = useState(false);
-  const { transactions, isLoading } = useDemoTransactions('demo-user', 30);
-  const { categorizations } = useDemoCategorization('demo-user');
-  const { calculations: incomeCalc, hasActiveIncome } = useIncome('demo-user');
+  const { transactions: rawTransactions, isLoading } = useTransactions(30);
+  const { categorizations: rawCategorizations } = useCategorizations();
+  const userId = session?.user?.id || 'demo-user';
+  const { calculations: incomeCalc, hasActiveIncome } = useIncome(userId);
+
+  // Transform transactions and categorizations to expected format
+  const transactions = useMemo(() =>
+    rawTransactions.map(t => ({
+      ...t,
+      date: new Date(t.date),
+      amount: t.amount,
+    })), [rawTransactions]);
+
+  const categorizations = useMemo(() =>
+    rawCategorizations.map(c => ({
+      transactionId: c.transactionId,
+      zone: c.zone,
+    })), [rawCategorizations]);
 
   // Calculate stats
   const stats = (() => {

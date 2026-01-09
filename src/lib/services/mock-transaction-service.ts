@@ -26,56 +26,99 @@ const MOCK_MERCHANTS = {
     { name: 'Water Utility', category: 'Utilities', range: [30, 80], monthly: true },
   ],
   YELLOW: [
-    { name: 'Uber Eats', category: 'Food Delivery', range: [18, 55] },
-    { name: 'DoorDash', category: 'Food Delivery', range: [20, 60] },
-    { name: 'Grubhub', category: 'Food Delivery', range: [22, 50] },
+    // Food delivery - the "I'm too tired to cook" trap
+    { name: 'Uber Eats', category: 'Food Delivery', range: [22, 55] },
+    { name: 'DoorDash', category: 'Food Delivery', range: [25, 65] },
+    { name: 'Grubhub', category: 'Food Delivery', range: [20, 50] },
+    { name: 'Postmates', category: 'Food Delivery', range: [18, 45] },
+    // Streaming - the subscription creep
     { name: 'Netflix', category: 'Streaming', range: [15.99, 22.99], monthly: true },
     { name: 'Spotify', category: 'Streaming', range: [10.99, 16.99], monthly: true },
     { name: 'Hulu', category: 'Streaming', range: [7.99, 17.99], monthly: true },
     { name: 'Disney+', category: 'Streaming', range: [7.99, 13.99], monthly: true },
-    { name: 'HBO Max', category: 'Streaming', range: [9.99, 15.99], monthly: true },
+    { name: 'HBO Max', category: 'Streaming', range: [15.99, 15.99], monthly: true },
     { name: 'Apple Music', category: 'Streaming', range: [10.99, 16.99], monthly: true },
-    { name: 'Target', category: 'Shopping', range: [25, 150] },
-    { name: 'Amazon', category: 'Shopping', range: [15, 200] },
-    { name: 'Starbucks', category: 'Coffee', range: [5, 15] },
-    { name: "Peet's Coffee", category: 'Coffee', range: [4, 12] },
-    { name: 'Blue Bottle Coffee', category: 'Coffee', range: [6, 18] },
-    { name: 'Chipotle', category: 'Dining', range: [12, 25] },
-    { name: 'Sweetgreen', category: 'Dining', range: [14, 22] },
-    { name: 'Panera Bread', category: 'Dining', range: [10, 20] },
-    { name: 'Planet Fitness', category: 'Fitness', range: [10, 25], monthly: true },
-    { name: 'Equinox', category: 'Fitness', range: [180, 250], monthly: true },
-    { name: 'Uber', category: 'Rideshare', range: [12, 45] },
-    { name: 'Lyft', category: 'Rideshare', range: [10, 40] },
-    { name: 'AMC Theatres', category: 'Entertainment', range: [15, 35] },
+    { name: 'YouTube Premium', category: 'Streaming', range: [13.99, 22.99], monthly: true },
+    { name: 'Paramount+', category: 'Streaming', range: [5.99, 11.99], monthly: true },
+    { name: 'Peacock', category: 'Streaming', range: [5.99, 11.99], monthly: true },
+    { name: 'Amazon Prime', category: 'Subscription', range: [14.99, 14.99], monthly: true },
+    // Coffee - daily habit that bleeds money
+    { name: 'Starbucks', category: 'Coffee', range: [5, 12] },
+    { name: 'Starbucks', category: 'Coffee', range: [6, 15] }, // Duplicated for higher frequency
+    { name: 'Dunkin', category: 'Coffee', range: [4, 10] },
+    { name: "Peet's Coffee", category: 'Coffee', range: [5, 12] },
+    // Fast food - "just grabbing something quick"
+    { name: 'McDonalds', category: 'Fast Food', range: [8, 18] },
+    { name: 'Chick-fil-A', category: 'Fast Food', range: [10, 22] },
+    { name: 'Taco Bell', category: 'Fast Food', range: [8, 18] },
+    { name: 'Wendys', category: 'Fast Food', range: [9, 16] },
+    { name: 'Chipotle', category: 'Fast Casual', range: [14, 25] },
+    { name: 'Panera Bread', category: 'Fast Casual', range: [12, 22] },
+    { name: 'Five Guys', category: 'Fast Casual', range: [15, 25] },
+    // Shopping - impulse territory
+    { name: 'Target', category: 'Shopping', range: [25, 120] },
+    { name: 'Amazon', category: 'Shopping', range: [12, 85] },
+    { name: 'Walmart', category: 'Shopping', range: [20, 80] },
+    { name: 'TJ Maxx', category: 'Shopping', range: [25, 75] },
+    // Unused subscriptions - money drains
+    { name: 'Planet Fitness', category: 'Fitness', range: [24.99, 24.99], monthly: true },
+    { name: 'Headspace', category: 'Subscription', range: [12.99, 12.99], monthly: true },
+    { name: 'Audible', category: 'Subscription', range: [14.95, 14.95], monthly: true },
+    { name: 'iCloud Storage', category: 'Subscription', range: [2.99, 9.99], monthly: true },
+    // Rideshare - adds up fast
+    { name: 'Uber', category: 'Rideshare', range: [15, 45] },
+    { name: 'Lyft', category: 'Rideshare', range: [12, 40] },
+    // Entertainment
+    { name: 'AMC Theatres', category: 'Entertainment', range: [18, 40] },
   ],
   RED: [
-    { name: 'Louis Vuitton', category: 'Luxury', range: [500, 2500] },
-    { name: 'Gucci', category: 'Luxury', range: [400, 2000] },
-    { name: 'Apple Store', category: 'Electronics', range: [100, 1500] },
-    { name: 'Best Buy', category: 'Electronics', range: [50, 800] },
-    { name: 'Nordstrom', category: 'Fashion', range: [80, 400] },
-    { name: 'Bloomingdales', category: 'Fashion', range: [100, 500] },
-    { name: 'Sephora', category: 'Beauty', range: [40, 200] },
-    { name: 'Ulta Beauty', category: 'Beauty', range: [30, 150] },
-    { name: 'The Cheesecake Factory', category: 'Dining', range: [50, 120] },
-    { name: 'Morton\'s Steakhouse', category: 'Dining', range: [100, 250] },
-    { name: 'Club Nightlife', category: 'Nightlife', range: [50, 200] },
-    { name: 'Bar Tab', category: 'Nightlife', range: [40, 150] },
-    { name: 'Ticketmaster', category: 'Entertainment', range: [75, 400] },
-    { name: 'StubHub', category: 'Entertainment', range: [100, 500] },
-    { name: 'GameStop', category: 'Gaming', range: [60, 300] },
-    { name: 'Steam Games', category: 'Gaming', range: [20, 80] },
-    { name: 'SHEIN', category: 'Fast Fashion', range: [30, 100] },
-    { name: 'Wish.com', category: 'Impulse', range: [15, 60] },
+    // Late night Amazon - the classic trap
+    { name: 'Amazon', category: 'Late Night Shopping', range: [20, 120] },
+    { name: 'Amazon', category: 'Impulse Buy', range: [15, 75] },
+    // Convenience store runs - small leaks
+    { name: '7-Eleven', category: 'Convenience', range: [8, 25] },
+    { name: 'Wawa', category: 'Convenience', range: [10, 30] },
+    { name: 'Circle K', category: 'Convenience', range: [8, 22] },
+    // Alcohol - social and solo
+    { name: 'Total Wine', category: 'Alcohol', range: [25, 80] },
+    { name: 'BevMo', category: 'Alcohol', range: [20, 65] },
+    { name: 'Bar Tab', category: 'Nightlife', range: [35, 120] },
+    { name: 'Happy Hour', category: 'Nightlife', range: [25, 60] },
+    // Fast fashion - cheap but adds up
+    { name: 'SHEIN', category: 'Fast Fashion', range: [25, 85] },
+    { name: 'Zara', category: 'Fast Fashion', range: [40, 120] },
+    { name: 'H&M', category: 'Fast Fashion', range: [30, 90] },
+    { name: 'Forever 21', category: 'Fast Fashion', range: [20, 70] },
+    // Beauty & self-care splurges
+    { name: 'Sephora', category: 'Beauty', range: [35, 120] },
+    { name: 'Ulta Beauty', category: 'Beauty', range: [25, 90] },
+    // Electronics & gadgets
+    { name: 'Apple Store', category: 'Electronics', range: [30, 200] },
+    { name: 'Best Buy', category: 'Electronics', range: [40, 150] },
+    // Gaming - microtransactions and games
+    { name: 'PlayStation Store', category: 'Gaming', range: [15, 70] },
+    { name: 'Steam Games', category: 'Gaming', range: [15, 60] },
+    { name: 'Xbox Store', category: 'Gaming', range: [15, 70] },
+    // Food delivery when too lazy (premium prices)
+    { name: 'DoorDash', category: 'Lazy Meal', range: [35, 60] },
+    // Vending machines & snacks
+    { name: 'Vending Machine', category: 'Snacks', range: [3, 8] },
+    { name: 'Gas Station Snacks', category: 'Snacks', range: [5, 15] },
+    // Entertainment splurges
+    { name: 'Ticketmaster', category: 'Events', range: [50, 200] },
+    { name: 'StubHub', category: 'Events', range: [60, 250] },
+    // Lottery & gambling (small amounts)
+    { name: 'Lottery Tickets', category: 'Gambling', range: [5, 20] },
+    { name: 'Scratch Offs', category: 'Gambling', range: [10, 30] },
   ],
 } as const;
 
-// Zone weights for random selection (Green: 50%, Yellow: 35%, Red: 15%)
+// Zone weights for random selection - reflects someone who NEEDS SpendSignal
+// Heavy on discretionary (Yellow) and impulse (Red) spending
 const ZONE_WEIGHTS = {
-  GREEN: 50,
-  YELLOW: 35,
-  RED: 15,
+  GREEN: 25,
+  YELLOW: 45,
+  RED: 30,
 };
 
 // Merchant type definition
@@ -297,89 +340,129 @@ function getGreenReasoning(category: string): string {
 function getYellowReasoning(category: string, merchant: string): string {
   const reasons: Record<string, string[]> = {
     'Food Delivery': [
-      'Convenient, but is cooking really that hard?',
-      'Delivery fees add up. Track how often.',
-      'Your kitchen is right there.',
+      'Delivery fees + tip + markup = 40% more than cooking.',
+      'Third delivery this week. See a pattern?',
+      'Your kitchen is literally right there.',
     ],
     Streaming: [
-      'How many streaming services do you actually watch?',
-      'Are you getting value from this subscription?',
-      'When did you last use this?',
+      'You have 7 streaming services. Do the math.',
+      'When did you last actually watch this one?',
+      'That\'s $150/year for background noise.',
+    ],
+    Subscription: [
+      'Forgot you had this, didn\'t you?',
+      'Auto-renew is how they get you.',
+      'Cancel and see if you miss it. Bet you won\'t.',
     ],
     Coffee: [
-      'That\'s a lot of lattes. Home brew is $0.50.',
-      'Coffee habit adding up? Do the math.',
-      'Is this fuel or procrastination?',
+      '$6 x 5 days x 52 weeks = $1,560/year. On coffee.',
+      'Home brew costs $0.25. Just saying.',
+      'This coffee shop knows your name. Red flag.',
     ],
-    Dining: [
-      'Eating out is fun. But how often?',
-      'Social meal or solo splurge?',
-      'Could you make this at home?',
+    'Fast Food': [
+      'Quick and cheap? Actually neither.',
+      'Your body and wallet both felt that.',
+      'Meal prep Sunday exists for a reason.',
+    ],
+    'Fast Casual': [
+      '$15 for a bowl you could make for $4.',
+      'Chipotle again? That\'s the third time.',
+      'Convenience has a 300% markup.',
     ],
     Shopping: [
-      'Need or want? Be honest.',
-      'Will you use this in 30 days?',
-      'Impulse or planned purchase?',
+      'Need or want? Be brutally honest.',
+      'Will this spark joy in 30 days?',
+      'The cart is a trap. Walk away.',
     ],
     Fitness: [
-      'Are you actually going to the gym?',
-      'Great investment IF you use it.',
-      'When was your last workout there?',
+      'That gym membership judging you from your bank statement.',
+      'Paying to not go is peak irony.',
+      'Cancel it or actually use it.',
     ],
     Rideshare: [
-      'Public transit an option here?',
-      'Surge pricing active?',
-      'Could you have walked?',
+      'Surge pricing is highway robbery.',
+      'That 10 minute drive cost $25.',
+      'Bus pass is $100/month. Do the math.',
     ],
     Entertainment: [
-      'Budget for fun is healthy. Is this in budget?',
-      'Memorable experience or forgettable?',
-      'Worth skipping something else for?',
+      'Fun money is fine. Is this budgeted?',
+      'Will you remember this next month?',
+      'Worth skipping retirement contribution for?',
     ],
   };
-  const categoryReasons = reasons[category] || ['Evaluate if this adds value.'];
+  const categoryReasons = reasons[category] || ['Does this actually add value to your life?'];
   return randomPick(categoryReasons);
 }
 
 function getRedReasoning(category: string, amount: number): string {
   const reasons: Record<string, string[]> = {
-    Luxury: [
-      `$${amount.toFixed(0)} could be invested instead.`,
-      'Luxury or necessity? You know the answer.',
-      'What would Clark Howard say?',
+    'Late Night Shopping': [
+      '2am Amazon orders are never good decisions.',
+      'Sleep on it. Literally.',
+      'Your tired brain is not your financial advisor.',
     ],
-    Electronics: [
-      'Do you need this or want this?',
-      'Your current device still works, right?',
-      'New and shiny isn\'t always better.',
+    'Impulse Buy': [
+      'Would you buy this if you had to drive to get it?',
+      'One-click ordering is financial sabotage.',
+      'That dopamine hit cost you $' + amount.toFixed(0) + '.',
     ],
-    Fashion: [
-      'Fast fashion = fast regret.',
-      'Will you wear this 30 times?',
-      'Closet full, nothing to wear?',
+    Convenience: [
+      'Convenience store = 200% markup.',
+      'You paid $4 for a drink you have at home.',
+      'These small purchases are the real budget killers.',
     ],
-    Beauty: [
-      'Skincare routine getting expensive?',
-      'Do you use what you already have?',
-      'Marketing got you, didn\'t it?',
+    Alcohol: [
+      'Liquid calories and liquid money. Both gone.',
+      'That\'s a lot of wine for a Tuesday.',
+      'Your liver and wallet are both concerned.',
     ],
     Nightlife: [
-      'Fun night, expensive morning.',
-      'Social pressure or genuine fun?',
-      'Your bank account felt that.',
+      'Fun night, regretful morning, empty wallet.',
+      'Drunk you has no financial sense.',
+      'The bar tab never lies.',
+    ],
+    'Fast Fashion': [
+      'Cheap clothes you\'ll throw away in 3 months.',
+      'Your closet is full. This won\'t fix that.',
+      'Fast fashion, fast regret.',
+    ],
+    Beauty: [
+      'Your bathroom is already a Sephora.',
+      'Marketing convinced you that you need this.',
+      'Will this actually get used or collect dust?',
+    ],
+    Electronics: [
+      'The one you have still works fine.',
+      'Upgrade culture is a financial trap.',
+      'That\'s $' + amount.toFixed(0) + ' for marginal improvement.',
     ],
     Gaming: [
-      'Another game to add to the backlog?',
-      'Will you finish this one?',
-      'Entertainment budget: check it.',
+      'Steam library: 200 games. Games played: 5.',
+      'Another game for the backlog.',
+      'Your entertainment budget called. It\'s concerned.',
     ],
-    Impulse: [
-      'Late night shopping? Classic trap.',
-      'Would you buy this tomorrow morning?',
+    'Lazy Meal': [
+      'Premium delivery for food you could make.',
+      'That burger cost $45 with fees.',
+      'Peak laziness has a high price tag.',
+    ],
+    Snacks: [
+      'Gas station snacks add up fast.',
+      '$5 here, $5 there = $150/month.',
+      'Snacking your way to broke.',
+    ],
+    Events: [
       'FOMO is expensive.',
+      'Will you remember this in a year?',
+      'That\'s rent money for a concert.',
+    ],
+    Gambling: [
+      'The house always wins. Always.',
+      'Lottery is a tax on people bad at math.',
+      'Zero return on investment. Literally.',
     ],
   };
-  const categoryReasons = reasons[category] || [`$${amount.toFixed(0)} you could save or invest.`];
+  const categoryReasons = reasons[category] || [`$${amount.toFixed(0)} that could be building your future instead.`];
   return randomPick(categoryReasons);
 }
 

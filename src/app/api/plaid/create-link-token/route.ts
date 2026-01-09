@@ -24,9 +24,8 @@ export async function POST() {
       );
     }
 
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
-
     // Create link token
+    // Note: redirect_uri only needed for OAuth flows and must be registered in Plaid Dashboard
     const response = await plaidClient.linkTokenCreate({
       user: {
         client_user_id: session.user.id,
@@ -35,17 +34,18 @@ export async function POST() {
       products: PLAID_PRODUCTS,
       country_codes: PLAID_COUNTRY_CODES,
       language: 'en',
-      redirect_uri: process.env.PLAID_REDIRECT_URI || `${appUrl}/dashboard/settings/connections`,
     });
 
     return NextResponse.json({
       linkToken: response.data.link_token,
       expiration: response.data.expiration,
     });
-  } catch (error) {
-    console.error('Create link token error:', error);
+  } catch (error: unknown) {
+    // Log detailed Plaid error
+    const plaidError = error as { response?: { data?: unknown } };
+    console.error('Create link token error:', JSON.stringify(plaidError.response?.data, null, 2));
     return NextResponse.json(
-      { error: 'Failed to create link token' },
+      { error: 'Failed to create link token', details: plaidError.response?.data },
       { status: 500 }
     );
   }

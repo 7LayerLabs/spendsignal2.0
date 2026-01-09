@@ -2,8 +2,7 @@
 
 import { useState, useMemo } from 'react';
 import Link from 'next/link';
-import { useDemoTransactions } from '@/hooks/use-demo-transactions';
-import { useDemoCategorization } from '@/hooks/use-categorization';
+import { useTransactions, useCategorizations } from '@/hooks/use-transactions';
 import { formatCurrency, formatRelativeDate } from '@/lib/utils';
 import { ZONE_CONFIG, type TrafficLightZone } from '@/constants/traffic-light';
 
@@ -31,8 +30,20 @@ function SortIcon({ field, sortField, sortDirection }: { field: SortField; sortF
 }
 
 export default function TransactionsPage() {
-  const { transactions, isLoading } = useDemoTransactions('demo-user', 30);
-  const { categorizations, categorize } = useDemoCategorization('demo-user');
+  const { transactions: rawTransactions, isLoading } = useTransactions(90);
+  const { categorizations, categorize } = useCategorizations();
+
+  // Transform transactions to expected format
+  const transactions = useMemo(() =>
+    rawTransactions.map(t => ({
+      id: t.id,
+      amount: t.amount,
+      description: t.description,
+      merchantName: t.merchantName,
+      date: new Date(t.date),
+      defaultCategory: t.defaultCategory,
+      isRecurring: t.isRecurring,
+    })), [rawTransactions]);
 
   const [searchQuery, setSearchQuery] = useState('');
   const [zoneFilter, setZoneFilter] = useState<ZoneFilter>('ALL');
@@ -43,7 +54,7 @@ export default function TransactionsPage() {
   // Create categorization map
   const categorizationMap = useMemo(() => {
     const map = new Map<string, TrafficLightZone>();
-    categorizations.forEach((c) => map.set(c.transactionId, c.zone));
+    categorizations.forEach((c) => map.set(c.transactionId, c.zone as TrafficLightZone));
     return map;
   }, [categorizations]);
 
