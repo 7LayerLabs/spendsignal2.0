@@ -14,6 +14,7 @@ interface UncategorizedPoolProps {
   onToggleSelection?: (id: string) => void;
   onSelectAll?: () => void;
   onClearSelection?: () => void;
+  onAutoCategorize?: (transactionId: string, zone: TrafficLightZone) => void;
 }
 
 type SortOption = 'date-desc' | 'date-asc' | 'amount-desc' | 'amount-asc';
@@ -26,6 +27,7 @@ export function UncategorizedPool({
   onToggleSelection,
   onSelectAll,
   onClearSelection,
+  onAutoCategorize,
 }: UncategorizedPoolProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [zoneFilter, setZoneFilter] = useState<ZoneFilter>('ALL');
@@ -390,14 +392,22 @@ export function UncategorizedPool({
                 : 'Drag to categorize'
               }
             </p>
-            <button
-              className="text-sm text-[#FFC700] hover:text-white transition-colors"
-              onClick={() => {
-                // Future: auto-categorize based on AI suggestions
-              }}
-            >
-              Auto-categorize all
-            </button>
+            {aiSuggestions && aiSuggestions.size > 0 && onAutoCategorize && (
+              <button
+                className="text-sm text-[#FFC700] hover:text-white transition-colors font-medium"
+                onClick={() => {
+                  // Auto-categorize all transactions that have AI suggestions
+                  transactions.forEach((txn) => {
+                    const suggestion = aiSuggestions.get(txn.id);
+                    if (suggestion) {
+                      onAutoCategorize(txn.id, suggestion.zone);
+                    }
+                  });
+                }}
+              >
+                Auto-categorize {aiSuggestions.size} items
+              </button>
+            )}
           </div>
         </div>
       )}

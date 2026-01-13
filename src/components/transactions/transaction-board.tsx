@@ -16,7 +16,7 @@ import {
 import { UncategorizedPool } from './uncategorized-pool';
 import { TrafficLightZoneComponent } from './traffic-light-zone';
 import { TransactionCardOverlay, MultiTransactionOverlay } from './transaction-card';
-import { generateAISuggestion } from '@/lib/services/mock-transaction-service';
+import { autoCategorize } from '@/lib/services/auto-categorize';
 import type { Transaction, UserCategorization } from '@/types';
 import type { TrafficLightZone } from '@/constants/traffic-light';
 
@@ -70,26 +70,23 @@ export function TransactionBoard({
     return groups;
   }, [transactions, categorizationMap]);
 
-  // Generate AI suggestions for uncategorized transactions
+  // Generate AI suggestions for uncategorized transactions using real categorization rules
   const aiSuggestions = useMemo(() => {
     const suggestions = new Map<string, { zone: TrafficLightZone; confidence: number; reasoning: string }>();
 
     groupedTransactions.UNCATEGORIZED.forEach((transaction) => {
-      const mockTx = {
-        id: transaction.id,
-        userId: transaction.userId,
-        amount: transaction.amount,
-        description: transaction.description,
-        merchantName: transaction.merchantName,
-        date: transaction.date,
-        source: transaction.source,
-        externalId: transaction.externalId,
-        defaultCategory: transaction.defaultCategory,
-        pending: transaction.pending,
-        isRecurring: transaction.isRecurring,
-      };
-      const suggestion = generateAISuggestion(mockTx);
-      suggestions.set(transaction.id, suggestion);
+      const result = autoCategorize(
+        transaction.merchantName || '',
+        transaction.description,
+        Number(transaction.amount)
+      );
+
+      // autoCategorize always returns a result now
+      suggestions.set(transaction.id, {
+        zone: result.zone,
+        confidence: result.confidence,
+        reasoning: result.reasoning,
+      });
     });
 
     return suggestions;
@@ -264,6 +261,7 @@ export function TransactionBoard({
           onToggleSelection={toggleSelection}
           onSelectAll={() => selectAll(groupedTransactions.UNCATEGORIZED.map((t) => t.id))}
           onClearSelection={clearSelection}
+          onAutoCategorize={onCategorize}
         />
 
         {/* Green Zone */}

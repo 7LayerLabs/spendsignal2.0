@@ -83,3 +83,35 @@ export async function GET(request: NextRequest) {
     );
   }
 }
+
+// DELETE - Clear all transactions for the user
+export async function DELETE() {
+  try {
+    const session = await auth();
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    // Delete all categorizations first (foreign key constraint)
+    await prisma.userCategorization.deleteMany({
+      where: { userId: session.user.id },
+    });
+
+    // Delete all transactions
+    const result = await prisma.transaction.deleteMany({
+      where: { userId: session.user.id },
+    });
+
+    return NextResponse.json({
+      success: true,
+      deleted: result.count,
+      message: `Deleted ${result.count} transactions`,
+    });
+  } catch (error) {
+    console.error('Delete transactions error:', error);
+    return NextResponse.json(
+      { error: 'Failed to delete transactions' },
+      { status: 500 }
+    );
+  }
+}

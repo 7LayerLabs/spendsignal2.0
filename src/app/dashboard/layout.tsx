@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useSession, signOut } from 'next-auth/react';
+import { useDataMode } from '@/hooks/use-data-mode';
 
 // Traffic light icon component - vertical
 function TrafficLightDots() {
@@ -119,6 +120,7 @@ export default function DashboardLayout({
   const profileRef = useRef<HTMLDivElement>(null);
   const pathname = usePathname();
   const { data: session } = useSession();
+  const { mode, toggleMode } = useDataMode();
 
   // Close profile dropdown when clicking outside
   useEffect(() => {
@@ -232,16 +234,36 @@ export default function DashboardLayout({
             );
           })}
 
-          {/* Demo mode indicator */}
-          <div className="mt-4 px-3 py-3 bg-[#FFC700]/10 border border-[#FFC700]/20">
-            <div className="flex items-center gap-2 mb-1">
-              <div className="w-2 h-2 rounded-full bg-[#FFC700] animate-pulse" />
-              <span className="text-xs font-medium text-[#FFC700]">Demo Mode</span>
+          {/* Data mode toggle */}
+          <button
+            onClick={toggleMode}
+            className={`mt-4 w-full px-3 py-3 border transition-all ${
+              mode === 'demo'
+                ? 'bg-[#FFC700]/10 border-[#FFC700]/20 hover:border-[#FFC700]/40'
+                : 'bg-[#22C55E]/10 border-[#22C55E]/20 hover:border-[#22C55E]/40'
+            }`}
+          >
+            <div className="flex items-center justify-between mb-1">
+              <div className="flex items-center gap-2">
+                <div className={`w-2 h-2 rounded-full ${
+                  mode === 'demo' ? 'bg-[#FFC700] animate-pulse' : 'bg-[#22C55E]'
+                }`} />
+                <span className={`text-xs font-medium ${
+                  mode === 'demo' ? 'text-[#FFC700]' : 'text-[#22C55E]'
+                }`}>
+                  {mode === 'demo' ? 'Demo Mode' : 'Real Data'}
+                </span>
+              </div>
+              <svg className="w-4 h-4 text-[#6B7280]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 9l4-4 4 4m0 6l-4 4-4-4" />
+              </svg>
             </div>
-            <p className="text-xs text-[#6B7280]">
-              Using mock data. Connect banks for real transactions.
+            <p className="text-xs text-[#6B7280] text-left">
+              {mode === 'demo'
+                ? 'Using mock data. Click to switch.'
+                : 'Using imported/bank data.'}
             </p>
-          </div>
+          </button>
         </div>
       </aside>
 

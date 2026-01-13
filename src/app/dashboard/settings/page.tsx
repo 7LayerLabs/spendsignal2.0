@@ -6,6 +6,7 @@ import { useUserSettings, useUserProfile } from '@/hooks/use-user-settings';
 import { useIncome } from '@/hooks/use-income';
 import { useDemoTransactions } from '@/hooks/use-demo-transactions';
 import { useTheme } from '@/components/theme-provider';
+import { useDataMode } from '@/hooks/use-data-mode';
 import { formatCurrency } from '@/lib/utils';
 import { IncomeSettingsModal } from '@/components/income/income-settings-modal';
 import { CSVImportModal } from '@/components/import/csv-import-modal';
@@ -17,9 +18,11 @@ export default function SettingsPage() {
   const { calculations: incomeCalc, hasActiveIncome } = useIncome('demo-user');
   const { importTransactions, transactions } = useDemoTransactions('demo-user');
   const { theme, setTheme } = useTheme();
+  const { mode } = useDataMode();
   const [showIncomeModal, setShowIncomeModal] = useState(false);
   const [showImportModal, setShowImportModal] = useState(false);
   const [showPDFImportModal, setShowPDFImportModal] = useState(false);
+  const [isClearing, setIsClearing] = useState(false);
 
   if (isLoading) {
     return (
@@ -266,27 +269,60 @@ export default function SettingsPage() {
             </button>
           </SettingRow>
 
-          {/* Clear Demo Data */}
+          {/* Clear Data */}
           <SettingRow
-            label="Clear Demo Data"
-            description="Reset all demo transactions and categorizations"
+            label={mode === 'real' ? 'Clear All Data' : 'Clear Demo Data'}
+            description={mode === 'real'
+              ? 'Delete all transactions and categorizations from database'
+              : 'Reset all demo transactions and categorizations'
+            }
           >
             <button
-              onClick={() => {
-                if (confirm('Are you sure? This will clear all your demo data.')) {
-                  // Clear all spendsignal localStorage keys (both dash and underscore patterns)
+              onClick={async () => {
+                const message = mode === 'real'
+                  ? 'Are you sure? This will permanently delete all your transactions from the database.'
+                  : 'Are you sure? This will clear all your demo data.';
+
+                if (confirm(message)) {
+                  setIsClearing(true);
+
+                  // Save the current data mode before clearing
+                  const currentDataMode = localStorage.getItem('spendsignal-data-mode');
+
+                  // Clear localStorage (except data mode)
                   const keys = Object.keys(localStorage).filter(k =>
-                    k.startsWith('spendsignal-') || k.startsWith('spendsignal_')
+                    (k.startsWith('spendsignal-') || k.startsWith('spendsignal_')) &&
+                    k !== 'spendsignal-data-mode'
                   );
                   keys.forEach(k => localStorage.removeItem(k));
-                  // Set flag to prevent auto-regeneration of demo data
                   localStorage.setItem('spendsignal-data-cleared-demo-user', 'true');
+
+                  // Restore data mode setting
+                  if (currentDataMode) {
+                    localStorage.setItem('spendsignal-data-mode', currentDataMode);
+                  }
+
+                  // If in real mode, also clear database
+                  if (mode === 'real') {
+                    try {
+                      const response = await fetch('/api/transactions', {
+                        method: 'DELETE',
+                      });
+                      if (!response.ok) {
+                        console.error('Failed to clear database');
+                      }
+                    } catch (err) {
+                      console.error('Error clearing database:', err);
+                    }
+                  }
+
                   window.location.reload();
                 }
               }}
-              className="px-4 py-2 rounded bg-[#EF4444]/10 text-[#EF4444] text-sm font-medium hover:bg-[#EF4444]/20 transition-colors"
+              disabled={isClearing}
+              className="px-4 py-2 rounded bg-[#EF4444]/10 text-[#EF4444] text-sm font-medium hover:bg-[#EF4444]/20 transition-colors disabled:opacity-50"
             >
-              Clear Data
+              {isClearing ? 'Clearing...' : 'Clear Data'}
             </button>
           </SettingRow>
         </div>

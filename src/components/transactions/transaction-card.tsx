@@ -97,27 +97,25 @@ export function TransactionCard({
         ${isOverlay ? 'shadow-2xl rotate-3 scale-105' : ''}
       `}
     >
-      {/* Selection checkbox */}
-      {(selectionMode || isSelected) && (
-        <button
-          onClick={handleCheckboxClick}
-          onPointerDown={(e) => e.stopPropagation()}
-          className={`
-            absolute top-3 left-3 w-5 h-5 rounded border-2 flex items-center justify-center
-            transition-all duration-150 z-10
-            ${isSelected
-              ? 'bg-[#22C55E] border-[#22C55E]'
-              : 'bg-transparent border-[var(--foreground-subtle)] hover:border-[#22C55E]'
-            }
-          `}
-        >
-          {isSelected && (
-            <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-            </svg>
-          )}
-        </button>
-      )}
+      {/* Selection checkbox - always visible */}
+      <button
+        onClick={handleCheckboxClick}
+        onPointerDown={(e) => e.stopPropagation()}
+        className={`
+          absolute top-3 left-3 w-5 h-5 rounded border-2 flex items-center justify-center
+          transition-all duration-150 z-10
+          ${isSelected
+            ? 'bg-[#22C55E] border-[#22C55E]'
+            : 'bg-transparent border-[#424242] hover:border-[#22C55E]'
+          }
+        `}
+      >
+        {isSelected && (
+          <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+          </svg>
+        )}
+      </button>
 
       {/* Drag handle indicator */}
       <div className={`absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity ${selectionMode || isSelected ? 'right-2' : ''}`}>
@@ -126,8 +124,8 @@ export function TransactionCard({
         </svg>
       </div>
 
-      {/* Main content */}
-      <div className={`flex items-start justify-between gap-3 ${selectionMode || isSelected ? 'ml-7' : ''}`}>
+      {/* Main content - always has left margin for checkbox */}
+      <div className="flex items-start justify-between gap-3 ml-7">
         <div className="flex-1 min-w-0">
           <p className="text-base font-medium text-[var(--foreground)] truncate">
             {transaction.merchantName || 'Unknown Merchant'}
@@ -148,7 +146,7 @@ export function TransactionCard({
 
       {/* AI Suggestion Badge */}
       {aiSuggestion && suggestionStyle && (
-        <div className={`mt-3 p-3 rounded-lg ${suggestionStyle.bg} border ${suggestionStyle.border} ${selectionMode || isSelected ? 'ml-7' : ''}`}>
+        <div className={`mt-3 p-3 rounded-lg ${suggestionStyle.bg} border ${suggestionStyle.border} ml-7`}>
           <div className="flex items-center gap-2 mb-1">
             <div className={`w-2.5 h-2.5 rounded-full ${suggestionStyle.text.replace('text-', 'bg-')}`} />
             <span className={`text-sm font-medium ${suggestionStyle.text}`}>
@@ -165,8 +163,8 @@ export function TransactionCard({
       )}
 
       {/* Recurring indicator */}
-      {transaction.isRecurring && !selectionMode && !isSelected && (
-        <div className="absolute -top-2 -left-2 w-5 h-5 rounded-full bg-[#3B82F6] flex items-center justify-center">
+      {transaction.isRecurring && (
+        <div className="absolute -top-2 left-5 w-5 h-5 rounded-full bg-[#3B82F6] flex items-center justify-center">
           <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
           </svg>
@@ -175,7 +173,7 @@ export function TransactionCard({
 
       {/* Pending indicator */}
       {transaction.pending && (
-        <div className={`absolute top-2 ${selectionMode || isSelected ? 'left-10' : 'left-2'}`}>
+        <div className="absolute top-2 left-10">
           <span className="text-xs px-2 py-0.5 rounded-full bg-[#EAB308]/20 text-[#EAB308]">
             Pending
           </span>

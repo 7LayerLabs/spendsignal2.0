@@ -2,6 +2,7 @@
 
 import { useState, useCallback } from 'react';
 import type { Transaction } from '@/types';
+import { useDataMode } from '@/hooks/use-data-mode';
 
 interface CSVImportModalProps {
   isOpen: boolean;
@@ -139,10 +140,15 @@ export function CSVImportModal({ isOpen, onClose, onImport }: CSVImportModalProp
     merchant: '',
   });
   const [error, setError] = useState<string | null>(null);
+  const [importing, setImporting] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
+  const { mode } = useDataMode();
 
-  const handleFileUpload = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  const processFile = useCallback((file: File) => {
+    if (!file.name.toLowerCase().endsWith('.csv')) {
+      setError('Please upload a CSV file');
+      return;
+    }
 
     setError(null);
     const reader = new FileReader();
@@ -180,38 +186,104 @@ export function CSVImportModal({ isOpen, onClose, onImport }: CSVImportModalProp
     reader.readAsText(file);
   }, []);
 
-  const handleImport = useCallback(() => {
+  const handleFileUpload = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    processFile(file);
+  }, [processFile]);
+
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+  }, []);
+
+  const handleDragLeave = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+  }, []);
+
+  const handleDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+
+    const file = e.dataTransfer.files?.[0];
+    if (file) {
+      processFile(file);
+    }
+  }, [processFile]);
+
+  const handleImport = useCallback(async () => {
     if (!mapping.date || !mapping.amount) {
       setError('Date and Amount columns are required');
       return;
     }
 
-    const transactions: Omit<Transaction, 'id' | 'createdAt' | 'updatedAt'>[] = rows.map((row) => {
+    setImporting(true);
+    setError(null);
+
+    const transactions = rows.map((row) => {
       const amount = parseAmount(row[mapping.amount]);
       const description = mapping.description ? row[mapping.description] : '';
       const merchant = mapping.merchant ? row[mapping.merchant] : description.split(' ')[0];
 
       return {
-        userId: 'demo-user',
+        date: parseDate(row[mapping.date]).toISOString(),
         amount: Math.abs(amount),
         description: description || merchant,
         merchantName: merchant || description.split(' ').slice(0, 3).join(' '),
-        date: parseDate(row[mapping.date]),
+      };
+    });
+
+    // In real mode, save to database via API
+    if (mode === 'real') {
+      try {
+        const response = await fetch('/api/transactions/import', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ transactions }),
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          setError(data.error || 'Failed to import transactions');
+          setImporting(false);
+          return;
+        }
+
+        console.log('Imported to database:', data);
+        // Reload page to see imported transactions
+        window.location.reload();
+      } catch (err) {
+        console.error('Import error:', err);
+        setError('Failed to import transactions. Please try again.');
+        setImporting(false);
+      }
+    } else {
+      // In demo mode, use localStorage via the onImport callback
+      const demoTransactions: Omit<Transaction, 'id' | 'createdAt' | 'updatedAt'>[] = transactions.map((txn) => ({
+        userId: 'demo-user',
+        amount: txn.amount,
+        description: txn.description,
+        merchantName: txn.merchantName,
+        date: new Date(txn.date),
         source: 'MANUAL' as const,
         externalId: null,
         defaultCategory: null,
         plaidConnectionId: null,
         pending: false,
         isRecurring: false,
-      };
-    });
+      }));
 
-    console.log('Importing transactions:', transactions);
-    console.log('Sample transaction:', transactions[0]);
-    onImport(transactions);
-    // Reload page to ensure all components get fresh data
-    window.location.reload();
-  }, [rows, mapping, onImport]);
+      console.log('Importing to demo mode:', demoTransactions);
+      onImport(demoTransactions);
+      // Reload page to ensure all components get fresh data
+      window.location.reload();
+    }
+  }, [rows, mapping, onImport, mode]);
 
   const handleClose = useCallback(() => {
     setStep('upload');
@@ -261,7 +333,16 @@ export function CSVImportModal({ isOpen, onClose, onImport }: CSVImportModalProp
 
           {step === 'upload' && (
             <div className="space-y-6">
-              <div className="border-2 border-dashed border-[var(--border)] rounded-xl p-8 text-center hover:border-[#3B82F6]/50 transition-colors">
+              <div
+                onDragOver={handleDragOver}
+                onDragLeave={handleDragLeave}
+                onDrop={handleDrop}
+                className={`border-2 border-dashed rounded-xl p-8 text-center transition-colors ${
+                  isDragging
+                    ? 'border-[#3B82F6] bg-[#3B82F6]/10'
+                    : 'border-[var(--border)] hover:border-[#3B82F6]/50'
+                }`}
+              >
                 <input
                   type="file"
                   accept=".csv"
@@ -270,12 +351,16 @@ export function CSVImportModal({ isOpen, onClose, onImport }: CSVImportModalProp
                   id="csv-upload"
                 />
                 <label htmlFor="csv-upload" className="cursor-pointer">
-                  <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-[#3B82F6]/10 flex items-center justify-center">
+                  <div className={`w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center ${
+                    isDragging ? 'bg-[#3B82F6]/20' : 'bg-[#3B82F6]/10'
+                  }`}>
                     <svg className="w-8 h-8 text-[#3B82F6]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
                     </svg>
                   </div>
-                  <p className="text-[var(--foreground)] font-medium mb-1">Click to upload CSV</p>
+                  <p className="text-[var(--foreground)] font-medium mb-1">
+                    {isDragging ? 'Drop CSV file here' : 'Click to upload CSV'}
+                  </p>
                   <p className="text-sm text-[var(--foreground-subtle)]">or drag and drop</p>
                 </label>
               </div>
@@ -418,10 +503,22 @@ export function CSVImportModal({ isOpen, onClose, onImport }: CSVImportModalProp
               {step === 'map' && (
                 <button
                   onClick={handleImport}
-                  disabled={!mapping.date || !mapping.amount}
-                  className="px-6 py-2 text-sm font-semibold text-white bg-[#22C55E] rounded-lg hover:bg-[#16A34A] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  disabled={!mapping.date || !mapping.amount || importing}
+                  className="px-6 py-2 text-sm font-semibold text-white bg-[#22C55E] rounded-lg hover:bg-[#16A34A] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                 >
-                  Import {rows.length} Transactions
+                  {importing ? (
+                    <>
+                      <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                      </svg>
+                      Importing...
+                    </>
+                  ) : (
+                    <>
+                      Import {rows.length} to {mode === 'real' ? 'Database' : 'Demo'}
+                    </>
+                  )}
                 </button>
               )}
             </div>

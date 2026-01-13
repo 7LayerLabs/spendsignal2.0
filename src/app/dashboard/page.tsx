@@ -8,6 +8,7 @@ import { formatCurrency, calculateHealthScore } from '@/lib/utils';
 import { ZONE_CONFIG } from '@/constants/traffic-light';
 import { IncomeSettingsModal } from '@/components/income/income-settings-modal';
 import { useSession } from 'next-auth/react';
+import { generateInsights } from '@/lib/services/spending-insights';
 
 export default function DashboardPage() {
   const { data: session } = useSession();
@@ -30,6 +31,19 @@ export default function DashboardPage() {
       transactionId: c.transactionId,
       zone: c.zone,
     })), [rawCategorizations]);
+
+  // Generate spending insights
+  const insights = useMemo(() => {
+    if (transactions.length === 0) return [];
+    return generateInsights(
+      transactions.map(t => ({
+        ...t,
+        amount: Number(t.amount),
+      })),
+      categorizations,
+      hasActiveIncome ? incomeCalc.monthlyIncome : undefined
+    ).slice(0, 5); // Top 5 insights
+  }, [transactions, categorizations, hasActiveIncome, incomeCalc.monthlyIncome]);
 
   // Calculate stats
   const stats = (() => {
@@ -211,12 +225,61 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* Tip - subtle */}
-      {stats.totalAmount > 0 && (
-        <div className="p-4 bg-[#111820] border border-[#424242]">
-          <p className="text-sm text-[#9BA4B0]">
-            {getTip(stats)}
-          </p>
+      {/* Spending Insights */}
+      {insights.length > 0 && (
+        <div className="space-y-3">
+          <h3 className="text-sm font-medium text-[#9BA4B0]">Insights</h3>
+          {insights.map((insight, idx) => (
+            <div
+              key={idx}
+              className={`p-4 border ${
+                insight.type === 'warning'
+                  ? 'bg-[#EF4444]/10 border-[#EF4444]/30'
+                  : insight.type === 'win'
+                  ? 'bg-[#22C55E]/10 border-[#22C55E]/30'
+                  : insight.type === 'action'
+                  ? 'bg-[#EAB308]/10 border-[#EAB308]/30'
+                  : 'bg-[#111820] border-[#424242]'
+              }`}
+            >
+              <div className="flex items-start gap-3">
+                <div className={`mt-0.5 ${
+                  insight.type === 'warning' ? 'text-[#EF4444]' :
+                  insight.type === 'win' ? 'text-[#22C55E]' :
+                  insight.type === 'action' ? 'text-[#EAB308]' :
+                  'text-[#3B82F6]'
+                }`}>
+                  {insight.type === 'warning' && (
+                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
+                  )}
+                  {insight.type === 'win' && (
+                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  )}
+                  {insight.type === 'action' && (
+                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                    </svg>
+                  )}
+                  {insight.type === 'tip' && (
+                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                    </svg>
+                  )}
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-white">{insight.title}</p>
+                  <p className="text-sm text-[#9BA4B0] mt-1">{insight.message}</p>
+                  {insight.impact && (
+                    <p className="text-xs text-[#6B7280] mt-2 italic">{insight.impact}</p>
+                  )}
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
       )}
 
